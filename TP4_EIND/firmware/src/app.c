@@ -170,8 +170,8 @@ void APP_Tasks ( void )
         {
             valADC = BSP_ReadAllADC();    // Récupération des valeurs de tension et de courant
             
-            // S'il y n'y apas de surcourant
-            if((valADC.Chan0 <= COURANTMAX) && (!overCurrent))
+            // S'il y n'y a pas de surcourant
+            if((valADC.Chan0 < COURANTMAX) && (!overCurrent))
             {
                 Uk = APP_CalculePI(valADC.Chan1);   // Calcul du PI par rapport à la tension lue
                 APP_ReglagePWM(Uk);     // Réglage du PWM
@@ -184,7 +184,7 @@ void APP_Tasks ( void )
                 overCurrent = 1;    // Il y a un surcourant
                 overcurrentTimer++;
                 // Si le courant est plus bas que la limite basse
-                if((valADC.Chan0 <= COURANTLIMITBASSE) && (overcurrentTimer > OVERCURRENTWAIT))
+                if((valADC.Chan0 < COURANTLIMITBASSE) && (overcurrentTimer > OVERCURRENTWAIT))
                 {
                     overCurrent = 0;    // Il n'y a plus de surrocurant
                     overcurrentTimer = 0;
@@ -224,7 +224,7 @@ float APP_CalculePI(uint16_t valLue)
     static float Ui_k_1 = 0;      // facteur intégrateur => passé  
     float Uk;              // facteur globale
     
-    float erreur;
+    float erreur;   // Erreur en poucent
     
     erreur = (CONSIGNE - (float)valLue)/1024;
     
@@ -272,14 +272,6 @@ void APP_ReglagePWM(float Uk)
     //pulseWidht = pulseWidht - Uk;
     pulseWidht = Uk*1999;
     // Limitation de la largeur de pulse pour avoir toujours le bootstrap qui peut fonctionner
-//    if(pulseWidht > PULSWIGHTMAX)
-//    {
-//        pulseWidht = PULSWIGHTMAX;
-//    }
-//    else if(pulseWidht < PULSWIGHTMIN)
-//    {
-//        pulseWidht = PULSWIGHTMIN;
-//    }
     DRV_OC0_PulseWidthSet(pulseWidht);  // *65535/1023 = 64
 }
 
